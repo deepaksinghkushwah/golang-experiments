@@ -13,6 +13,7 @@ func main() {
 	http.HandleFunc("/", app.Home)
 	http.HandleFunc("/about", app.About)
 	http.HandleFunc("/contact", app.Contact)
+	http.HandleFunc("/bloglist", app.ListAllBlogs)
 	http.Handle("favicon.ico", http.NotFoundHandler())
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
