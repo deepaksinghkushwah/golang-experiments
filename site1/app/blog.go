@@ -1,12 +1,11 @@
 package app
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/deepaksinghkushwah/site1/models"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // ListAllBlogs will display all blogs
@@ -15,9 +14,13 @@ func ListAllBlogs(w http.ResponseWriter, r *http.Request) {
 	dataToPass := []models.BlogList{}
 
 	db := models.GetDbo()
+	defer db.Close()
 
-	rows, err := db.Query("SELECT * FROM `blog`")
+	err := db.Ping()
+	models.CheckDbErr(err)
 
+	rows, err := db.Query("SELECT * FROM blog")
+	defer rows.Close()
 	models.CheckDbErr(err)
 
 	var id int32
@@ -29,9 +32,12 @@ func ListAllBlogs(w http.ResponseWriter, r *http.Request) {
 			err := rows.Scan(&id, &title, &content, &status)
 			models.CheckDbErr(err)
 			dataToPass = append(dataToPass, models.BlogList{ID: id, Title: title, Content: content, Status: status})
-			fmt.Println(title)
+			//fmt.Println(title)
 		}
 	}
+
+	err = rows.Err()
+	models.CheckDbErr(err)
 
 	page := models.BlogPageList{Title: "Blog", Keywords: "Blog Listing", Description: "Listing of blogs", Rows: dataToPass}
 	err2 := tpl.ExecuteTemplate(w, "blog-list.html", page)

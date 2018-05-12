@@ -3,7 +3,12 @@
 {{template "main-navigation"}}
 <div class="container">
     {{ if .Rows}}
-        Data Found   
+        {{range $key, $row := .Rows}}
+            <div class="row well">
+                <div class="col-lg-12"><h1>{{$row.Title}}</h1></div>
+                <div class="col-lg-12">{{$row.Content}}</div>
+            </div>            
+        {{end}}
     {{end}}
 </div>
 {{template "footer"}}

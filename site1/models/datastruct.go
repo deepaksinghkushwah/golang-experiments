@@ -2,7 +2,7 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 )
 
 // Page struct for creatng structured page
@@ -29,7 +29,7 @@ type BlogPageList struct {
 
 // GetDbo function return database instance
 func GetDbo() *sql.DB {
-	db, err := sql.Open("sqlite3", "../database.db")
+	db, err := sql.Open("mysql", "root:deepak@tcp(127.0.0.1:3306)/site1-golang")
 	if err != nil {
 		CheckDbErr(err)
 	}
@@ -38,5 +38,8 @@ func GetDbo() *sql.DB {
 
 // CheckDbErr is function which show error
 func CheckDbErr(err error) {
-	fmt.Println(err)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 }
