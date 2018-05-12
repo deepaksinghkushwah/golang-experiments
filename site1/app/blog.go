@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/deepaksinghkushwah/site1/models"
+	// importing mysql drive anonmoulsy
 	_ "github.com/go-sql-driver/mysql"
 )
 
