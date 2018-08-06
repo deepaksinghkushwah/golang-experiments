@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <td>ID</td>
+                <td>Username</td>
+                <td>First Name</td>
+                <td>Last Name</td>
+                <td>Email</td>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range $key, $value := . }}
+            <tr>
+                <td>{{ $value.ID }}</td>
+                <td>{{ $value.Username }}</td>
+                <td>{{ $value.Firstname }}</td>
+                <td>{{ $value.Lastname }}</td>
+                <td>{{ $value.Email }}</td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+    <form action="" method="POST">
+        <input type="text" name="username" id="username">
+        <button type="submit">Save</button>
+    </form>
+</body>
+
+</html>
