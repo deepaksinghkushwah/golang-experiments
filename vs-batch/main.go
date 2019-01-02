@@ -1,14 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"strings"
 )
 
 func main() {
-	dat, err := ioutil.ReadFile("./content.txt")
+	dat, err := ioutil.ReadFile("./number.txt")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -20,9 +19,13 @@ func main() {
 			if len(nextsplit) > 1 {
 				str += nextsplit[1] + "\n"
 			}
-
 		}
-
 	}
-	fmt.Println(str)
+	err = ioutil.WriteFile("vs.txt", []byte(str), 0777)
+}
+
+func check(e error) {
+	if e != nil {
+		log.Fatalln(e)
+	}
 }
