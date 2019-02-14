@@ -1,0 +1,17 @@
+{{ template "header" . }}
+    <form action="" method="post">
+        <table class="table table-bordered">
+            <tr>
+                <td>
+                    <textarea name="comment" rows="10" class="form-control"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td><button type="submit">Save</button></td>
+            </tr>
+        </table>
+    </form>
+    {{ range .Comments }} 
+        {{.}}<br/>
+    {{ end }}
+{{ template "footer" . }}
