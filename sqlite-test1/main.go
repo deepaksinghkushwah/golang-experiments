@@ -18,7 +18,7 @@ func main() {
 	// insert into table
 	stmt, err := db.Prepare("INSERT INTO user (firstname,lastname,username, email, password) values (?, ?, ?, ?, ?)")
 	checkError(err)
-	for i := 20; i <= 30; i++ {
+	for i := 30; i <= 40; i++ {
 		_, err := stmt.Exec("sam", strconv.Itoa(i), "sam"+strconv.Itoa(i), "sam"+strconv.Itoa(i)+"@localhost.com", "123456")
 		checkError(err)
 	}
