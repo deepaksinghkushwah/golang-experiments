@@ -5,11 +5,11 @@ import (
 )
 
 func main() {
-	/*x := "Deepak Singh Kushwah"
+	x := "Deepak Singh Kushwah"
 	fmt.Println(x)
 	for i, item := range x {
 		fmt.Printf("%d \t\t %s\n", int32(i), string(item))
-	}*/
+	}
 
 	y := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	fmt.Println(y)
@@ -21,5 +21,7 @@ func main() {
 	mp := []string{"Money", "Penny", "ginger"}
 
 	xp := [][]string{jb, mp}
+	mxp := append(jb, mp...)
 	fmt.Println(xp)
+	fmt.Println(mxp)
 }
