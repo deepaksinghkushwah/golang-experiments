@@ -1,5 +1,7 @@
 {{template "header" .}}
 {{ $loggedIn := .IsLoggedIn}}
+<span class="pull-right"><strong>Total {{.Pager.TotalRecords}} record(s) in {{.Pager.TotalPages}} page(s)</strong></span>
+{{ .Pager.Render}}
 {{ $userID := .UserID}}
 {{ range $blog := .PageData }}
     <div class="row">
@@ -25,4 +27,5 @@
     </div>    
 
 {{ end }}
+{{ .Pager.Render}}
 {{template "footer" .}}

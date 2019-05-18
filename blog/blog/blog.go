@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/deepaksinghkushwah/blog/pagination"
 	"github.com/deepaksinghkushwah/blog/utils"
 )
 
@@ -32,14 +33,34 @@ type Blogs struct {
 // List list all blogs
 func List(w http.ResponseWriter, r *http.Request) {
 	page, _ := utils.GetPageStructure(w, r)
-
+	db := utils.GetDB()
 	/*if page.IsLoggedIn {
 		http.Redirect(w, r, "/secret", http.StatusSeeOther)
 	}*/
 	var blogs []Blogs
+	q := "SELECT count(id) FROM blog ORDER BY id DESC"
+	var totalRows int
+	err := db.QueryRow(q).Scan(&totalRows)
+	//fmt.Println("Total rows : ", totalRows)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	var offset int
+	perPage := 10
+	currentPage := 0
+	if r.URL.Query().Get("page") != "" {
+		currentPage, _ = strconv.Atoi(r.URL.Query().Get("page"))
+		offset = (currentPage - 1) * perPage
+	} else {
+		currentPage = 0
+		offset = 0
+	}
 
-	db := utils.GetDB()
-	result, err := db.Query("SELECT id, title, content, created_at,author FROM blog ORDER BY id DESC")
+	url := "/blog/list"
+	pager := pagination.New(totalRows, perPage, currentPage, url)
+	page.Pager = pager
+
+	result, err := db.Query("SELECT id, title, content, created_at, author FROM blog ORDER BY id DESC limit ?,?", offset, perPage)
 	if err != nil {
 		if err == sql.ErrNoRows {
 

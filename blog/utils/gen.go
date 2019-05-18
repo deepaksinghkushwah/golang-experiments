@@ -25,6 +25,7 @@ type GeneralPage struct {
 	FlashMessage interface{}
 	CurrentURL   string
 	UserID       int64
+	Pager        interface{}
 }
 
 // GetTemplate return template var
