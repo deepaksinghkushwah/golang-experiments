@@ -24,7 +24,7 @@ type GeneralPage struct {
 	PageData     interface{}
 	FlashMessage interface{}
 	CurrentURL   string
-	UserID       int64
+	UserID       int
 	Pager        interface{}
 }
 
@@ -40,6 +40,9 @@ func GetDB() *sql.DB {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	//db.SetConnMaxLifetime(time.Hour)
+	//db.SetMaxOpenConns(2)
+	//db.SetMaxIdleConns(1)
 	return db
 }
 
@@ -64,13 +67,13 @@ func CheckLoggedIn(r *http.Request) bool {
 }
 
 // GetLogginUserID to return login id or loggedin user or return 0
-func GetLogginUserID(r *http.Request) int64 {
+func GetLogginUserID(r *http.Request) int {
 	_, session := GetCookieStore(r, STORE_SESSION)
 	var x interface{} = session.Values["userID"]
 	if x == nil {
 		x = 0
 	}
-	return x.(int64)
+	return x.(int)
 }
 
 // GetPageStructure return populated general page structure

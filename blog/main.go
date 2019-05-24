@@ -24,6 +24,7 @@ func init() {
 
 func main() {
 
+	//runtime.GOMAXPROCS(0)
 	r := setupRoutes()
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
@@ -52,6 +53,8 @@ func setupRoutes() *mux.Router {
 	r.HandleFunc("/blog/edit/{id:[0-9]+}", blog.EditBlogPostHandler).Methods("POST")
 	r.HandleFunc("/blog/delete/{id:[0-9]+}", blog.DeleteBlogHandler).Methods("GET")
 	r.HandleFunc("/blog/popup", blog.PopulateBlogTable).Methods("GET")
+
+	r.HandleFunc("/blog/add-comment", blog.AddBlogCommentPostHandler).Methods("POST")
 
 	return r
 }

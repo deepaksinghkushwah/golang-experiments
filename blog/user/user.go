@@ -40,7 +40,7 @@ func LoginPostHandler(w http.ResponseWriter, r *http.Request) {
 	db := utils.GetDB()
 	defer db.Close()
 	var dbUsername, dbEmail, dbFullname string
-	var dbUserID int64
+	var dbUserID int
 	err := db.QueryRow("SELECT id, username, email, fullname FROM `user` WHERE username = ? AND password = ?", username, password).Scan(&dbUserID, &dbUsername, &dbEmail, &dbFullname)
 	if err != nil {
 		if err == sql.ErrNoRows {

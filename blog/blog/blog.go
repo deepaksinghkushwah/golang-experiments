@@ -3,6 +3,7 @@ package blog
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 )
 
 var tpl *template.Template
+var perPage = 100
 
 func init() {
 	tpl = utils.GetTemplate()
@@ -28,12 +30,30 @@ type Blogs struct {
 	Content   template.HTML
 	CreatedAt string
 	Author    int64
+	Comments  []Comment
+}
+
+// Comment list of all comments for blog
+type Comment struct {
+	ID        int64
+	BlogID    int64
+	ParentID  int64
+	Content   string
+	CreatedAt string
+	Author    Author
+}
+
+// Author user info who posted comment
+type Author struct {
+	ID   int64
+	Name string
 }
 
 // List list all blogs
 func List(w http.ResponseWriter, r *http.Request) {
 	page, _ := utils.GetPageStructure(w, r)
 	db := utils.GetDB()
+	defer db.Close()
 	/*if page.IsLoggedIn {
 		http.Redirect(w, r, "/secret", http.StatusSeeOther)
 	}*/
@@ -46,7 +66,7 @@ func List(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln(err)
 	}
 	var offset int
-	perPage := 10
+
 	currentPage := 0
 	if r.URL.Query().Get("page") != "" {
 		currentPage, _ = strconv.Atoi(r.URL.Query().Get("page"))
@@ -76,8 +96,10 @@ func List(w http.ResponseWriter, r *http.Request) {
 			result.Scan(&id, &title, &content, &createdAt, &author)
 			d := createdAt.Format(time.RFC1123)
 			//fmt.Println(createdAt, d)
+			idInt, _ := strconv.Atoi(id)
+			comments := GetComments(idInt)
 
-			blogs = append(blogs, Blogs{ID: id, Title: title, Content: content, CreatedAt: d, Author: author})
+			blogs = append(blogs, Blogs{ID: id, Title: title, Content: content, CreatedAt: d, Author: author, Comments: comments})
 		}
 	}
 
@@ -87,6 +109,37 @@ func List(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func GetComments(blogID int) []Comment {
+	var comments []Comment
+	db := utils.GetDB()
+	defer db.Close()
+	query := "SELECT id, blog_id, parent_id, content, created_at, created_by FROM comment WHERE blog_id = ? ORDER BY id DESC"
+	result, err := db.Query(query, blogID)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("No comments found for blog", blogID)
+		} else {
+			log.Fatalln(err)
+		}
+	} else {
+		for result.Next() {
+			var id, parentID, dBlogID int64
+			var createdAt time.Time
+			var content string
+			var createdBy int
+			result.Scan(&id, &dBlogID, &parentID, &content, &createdAt, &createdBy)
+			d := createdAt.Format(time.RFC1123)
+			author := GetAuthor(createdBy)
+			//fmt.Println(createdAt, d)
+
+			comments = append(comments, Comment{ID: id, BlogID: dBlogID, ParentID: parentID, Content: content, CreatedAt: d, Author: author})
+		}
+
+	}
+	return comments
 }
 
 // AddBlogGetHandler show blog form
@@ -106,6 +159,7 @@ func AddBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	content := r.PostFormValue("content")
 	db := utils.GetDB()
+	defer db.Close()
 	stmt, err := db.Prepare("INSERT INTO blog (title, content, created_at, status,author) VALUES(?,?,?,?,?)")
 	if err != nil {
 		log.Fatalln(err)
@@ -130,14 +184,29 @@ func DetailBlogGetHandler(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 	//fmt.Println(id)
 	db := utils.GetDB()
+	defer db.Close()
 	var blog Blogs
-	err := db.QueryRow("SELECT id, title, content, created_at, author FROM blog WHERE id = ?", id).Scan(&blog.ID, &blog.Title, &blog.Content, &blog.CreatedAt, &blog.Author)
+	err := db.QueryRow("SELECT id, title, content, created_at, author as comments FROM blog WHERE id = ?", id).Scan(&blog.ID, &blog.Title, &blog.Content, &blog.CreatedAt, &blog.Author)
 	page, _ := utils.GetPageStructure(w, r)
+	idInt, _ := strconv.Atoi(id)
+	blog.Comments = GetComments(idInt)
 	page.PageData = blog
 	err = tpl.ExecuteTemplate(w, "blog-detail.html", page)
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func GetAuthor(userID int) Author {
+	var author Author
+	db := utils.GetDB()
+	defer db.Close()
+	err := db.QueryRow("SELECT id, fullname FROM `user` WHERE id = ?", userID).Scan(&author.ID, &author.Name)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return author
 }
 
 // EditBlogGetHandler edit form show for blog
@@ -148,6 +217,7 @@ func EditBlogGetHandler(w http.ResponseWriter, r *http.Request) {
 	page, _ := utils.GetPageStructure(w, r)
 	userID := utils.GetLogginUserID(r)
 	db := utils.GetDB()
+	defer db.Close()
 	data := struct {
 		ID      string
 		Title   string
@@ -176,6 +246,7 @@ func EditBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	content := r.PostFormValue("content")
 	db := utils.GetDB()
+	defer db.Close()
 	stmt, err := db.Prepare("UPDATE blog SET title = ?, content = ? WHERE id = ? AND author = ?")
 	if err != nil {
 		log.Fatalln(err)
@@ -200,6 +271,7 @@ func DeleteBlogHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	db := utils.GetDB()
+	defer db.Close()
 	_, err := db.Exec("DELETE FROM blog WHERE id = ? and author = ?", id, utils.GetLogginUserID(r))
 	if err != nil {
 		log.Fatalln(err)
@@ -215,7 +287,7 @@ func DeleteBlogHandler(w http.ResponseWriter, r *http.Request) {
 // PopulateBlogTable blog table
 func PopulateBlogTable(w http.ResponseWriter, r *http.Request) {
 	db := utils.GetDB()
-
+	defer db.Close()
 	for i := 5000; i < 20000; i++ {
 		stmt, err := db.Prepare("INSERT INTO blog (title, content, created_at, status, author) VALUES(?,?,?,?,?)")
 		if err != nil {
@@ -227,4 +299,27 @@ func PopulateBlogTable(w http.ResponseWriter, r *http.Request) {
 
 	}
 	_, _ = w.Write([]byte("Table populated"))
+}
+
+// AddBlogCommentPostHandler save posted comment
+func AddBlogCommentPostHandler(w http.ResponseWriter, r *http.Request) {
+	utils.LoginRequired(w, r)
+	db := utils.GetDB()
+	defer db.Close()
+	r.ParseForm()
+	blogID := r.PostFormValue("blog_id")
+	content := r.PostFormValue("content")
+
+	stmt, err := db.Prepare("INSERT INTO comment (blog_id, parent_id, content, created_at, created_by) VALUES(?,?,?,?,?)")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(blogID, 0, content, time.Now().Format("2006-01-02 15:04:05"), utils.GetLogginUserID(r))
+	if err == nil {
+		_, flashSession := utils.GetCookieStore(r, utils.FLASH_SESSION)
+		flashSession.AddFlash("Comment added", "message")
+		flashSession.Save(r, w)
+		http.Redirect(w, r, "/blog/detail/"+blogID, http.StatusSeeOther)
+	}
 }
