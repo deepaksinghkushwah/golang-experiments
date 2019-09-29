@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	gu "github.com/deepaksinghkushwah/web-test1/generalutility"
+	gu "github.com/deepaksinghkushwah/tests/web-test1/generalutility"
 	_ "github.com/go-sql-driver/mysql"
 )
 
