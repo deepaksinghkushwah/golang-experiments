@@ -30,7 +30,7 @@ func main() {
 		}
 	}
 
-	fmt.Println("\nFound", len(foundUrls), "unique urls:\n")
+	fmt.Println("\nFound", len(foundUrls), "unique urls:\n ")
 
 	for url := range foundUrls {
 		fmt.Println(" - " + url)
